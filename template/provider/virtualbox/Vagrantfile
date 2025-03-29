@@ -33,6 +33,13 @@ boxes.append(
   config.winrm.retry_limit = 30
   config.winrm.retry_delay = 10
 
+  hostnames = {
+    "GOAD-DC01" => "sevenkingdoms.local",
+    "GOAD-DC02" => "north.sevenkingdoms.local",
+    "GOAD-DC03" => "essos.local"
+  }
+  hosts_content = boxes[0..2].map { |box| "#{box[:ip]}  #{hostnames[box[:name]]}" }.join(";")
+
   boxes.each do |box|
     config.vm.define box[:name] do |target|
       # BOX
@@ -60,14 +67,24 @@ boxes.append(
       if box[:os] == "windows"
         target.vm.guest = :windows
         target.vm.communicator = "winrm"
+
+        # fix issues
+        if box[:name] == "GOAD-DC02"
+          target.vm.provision :shell, :path => "../../../vagrant/install_dns_feature.ps1", privileged: false
+        end
+
         target.vm.provision :shell, :path => "../../../vagrant/Install-WMF3Hotfix.ps1", privileged: false
         target.vm.provision :shell, :path => "../../../vagrant/ConfigureRemotingForAnsible.ps1", privileged: false
+        target.vm.provision :shell, :path => "../../../vagrant/update_hosts.ps1", privileged: false, args: [hosts_content]
 
         # fix ip for vmware
         if ENV['VAGRANT_DEFAULT_PROVIDER'] == "vmware_desktop"
           target.vm.provision :shell, :path => "../../../vagrant/fix_ip.ps1", privileged: false, args: box[:ip]
         end
 
+        if ["GOAD-DC01", "GOAD-DC02", "GOAD-DC03"].include?(box[:name])
+          target.vm.provision :shell, :path => "../../../vagrant/disable_IPv6.ps1", privileged: false
+        end
       else
         target.vm.communicator = "ssh"
       end

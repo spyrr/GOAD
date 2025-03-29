@@ -10,3 +10,6 @@ boxes = [
   # windows server 2016
   { :name => "GOAD-SRV03", :ip => "{{ip_range}}.23", :box => "StefanScherer/windows_2016", :box_version => "2019.02.14", :os => "windows", :cpus => 2, :mem => 5000}
 ]
+
+config.winrm.transport = "plaintext"
+config.winrm.basic_auth_only = true
