@@ -24,6 +24,7 @@
   ansible.windows.win_dns_client:
     adapter_names: "{{nat_adapter}}"
     dns_servers:
+      - "{{hostvars[dns_domain].ansible_host}}"
       - "{{dns_server}}"
   when: force_dns_server == "yes" and two_adapters
 
@@ -31,6 +32,7 @@
   ansible.windows.win_dns_client:
     adapter_names: "{{nat_adapter}}"
     dns_servers:
+      - "{{hostvars[dns_domain].ansible_host}}"
       - "{{dns_server_forwarder}}"
   when: force_dns_server != "yes" and two_adapters
 
